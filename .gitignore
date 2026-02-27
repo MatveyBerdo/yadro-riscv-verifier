@@ -1,0 +1,79 @@
+# Виртуальное окружение (у каждого своё!)
+venv/
+env/
+.env/
+ENV/
+.venv/
+
+# Кэш Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+.coverage.*
+*.cover
+htmlcov/
+coverage.xml
+*.coverage
+coverage.json
+
+# Результаты тестов и данные (свои для каждого)
+results/
+data/
+*.log
+*.rdl  # скомпилированные файлы SystemRDL (не исходники)
+*.bin
+*.hex
+
+# Временные файлы
+tmp/
+temp/
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE (у каждого свои настройки)
+.vscode/
+.idea/
+*.sublime-*
+.project
+.classpath
+.settings/
+
+# Jupyter (если будешь использовать)
+.ipynb_checkpoints/
+*.ipynb
+
+# Дистрибутивы и сборки
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Streamlit (кэш)
+.streamlit/secrets.toml  # если будут секреты
+
+# Файлы с секретами (никогда не коммитить!)
+*.key
+*.pem
+*.crt
+*.secret
+.env.local
+.env.*.local
+
+# Логи тестовых прогонов (если хочешь сохранять примеры, создай папку examples/)
+test_run_*.log
+coverage_history_*.png
+coverage_history_*.json
+
+# Архивы для сдачи (создаются в конце)
+final_report/
+*.zip
+*.tar.gz
+*.rar
