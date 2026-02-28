@@ -6,8 +6,8 @@
 
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/)
 [![pytest](https://img.shields.io/badge/pytest-7.4.0-green.svg)](https://pytest.org/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.25.0-red.svg)](https://streamlit.io/)
-[![Plotly](https://img.shields.io/badge/Plotly-5.14.1-blue.svg)](https://plotly.com/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.54.0-red.svg)](https://streamlit.io/)
+[![Plotly](https://img.shields.io/badge/Plotly-6.5.2-blue.svg)](https://plotly.com/)
 
 </div>
 
@@ -27,7 +27,7 @@
 
 ---
 
-## 👥 Команда UNITY
+## 👥 Команда V-TEAM
 
 | Участник | Роль | Контакт |
 |----------|------|---------|
