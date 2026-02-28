@@ -1,4 +1,4 @@
-# Виртуальное окружение (у каждого своё!)
+# Виртуальное окружение (у каждого своё)
 venv/
 env/
 .env/
@@ -20,7 +20,7 @@ coverage.xml
 coverage.json
 
 # Результаты тестов и данные (свои для каждого)
-results/
+#results/
 data/
 *.log
 *.rdl  # скомпилированные файлы SystemRDL (не исходники)
@@ -46,7 +46,7 @@ Thumbs.db
 .classpath
 .settings/
 
-# Jupyter (если будешь использовать)
+# Jupyter
 .ipynb_checkpoints/
 *.ipynb
 
@@ -59,7 +59,7 @@ build/
 # Streamlit (кэш)
 .streamlit/secrets.toml  # если будут секреты
 
-# Файлы с секретами (никогда не коммитить!)
+# Файлы с секретами
 *.key
 *.pem
 *.crt
@@ -67,12 +67,12 @@ build/
 .env.local
 .env.*.local
 
-# Логи тестовых прогонов (если хочешь сохранять примеры, создай папку examples/)
+# Логи тестовых прогонов
 test_run_*.log
 coverage_history_*.png
 coverage_history_*.json
 
-# Архивы для сдачи (создаются в конце)
+# Архивы для сдачи 
 final_report/
 *.zip
 *.tar.gz
