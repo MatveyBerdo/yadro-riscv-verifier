@@ -13,7 +13,7 @@
   "test_name": "test_name",    // какой тест упал
   "status": "open",           // open/fixed/verified/wontfix
   "notes": "заметки"
-}]s
+}]
 
 ## Примеры заполнения полей (пояснения):
 
