@@ -163,7 +163,7 @@ with st.sidebar:
     st.subheader("📊 Статус")
     
     # Время до дедлайна
-    deadline = datetime(2026, 3, 8, 21, 0)  # 8 марта 21:00
+    deadline = datetime(2026, 3, 7, 21, 0)  # 7 марта 21:00
     now = datetime.now()
     time_left = deadline - now
     
