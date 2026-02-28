@@ -53,8 +53,5 @@ source venv/bin/activate  # Linux/Mac
 # Установка зависимостей
 pip install -r requirements.txt
 
-# Запуск тестов
-pytest tests/ --cov=src
-
 # Запуск дашборда
-streamlit run scripts/dashboard.py
+streamlit run dashboard/app.py
