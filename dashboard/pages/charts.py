@@ -3,6 +3,7 @@
 Страница с отдельными графиками для презентации
 """
 
+from plotly.subplots import make_subplots
 import streamlit as st
 import pandas as pd
 import numpy as np

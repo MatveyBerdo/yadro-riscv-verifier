@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "timestamp": "2026-03-07T10:23:15",
+    "address": "0x24",
+    "expected": "0x12345678",
+    "actual": "0x87654321",
+    "description": "Некорректное чтение после записи. При записи 0x12345678 читается 0x87654321",
+    "severity": "critical",
+    "test_name": "test_write_readback",
+    "status": "open",
+    "notes": "Проявляется только после 10+ операций"
+  },
+  {
+    "id": 2,
+    "timestamp": "2026-03-07T11:47:32",
+    "address": "0x30",
+    "expected": "0x00000000",
+    "actual": "0xDEADBEEF",
+    "description": "Сброс не обнуляет регистр. После reset значение 0xDEADBEEF",
+    "severity": "high",
+    "test_name": "test_reset_value",
+    "status": "open",
+    "notes": ""
+  },
+  {
+    "id": 3,
+    "timestamp": "2026-03-07T13:08:41",
+    "address": "0x44",
+    "expected": "0x55555555",
+    "actual": "0xAAAAAAAA",
+    "description": "Биты инвертируются при записи",
+    "severity": "medium",
+    "test_name": "test_pattern",
+    "status": "verified",
+    "notes": "Подтверждено, будет исправлено в следующей версии"
+  },
+  {
+    "id": 4,
+    "timestamp": "2026-03-07T14:22:17",
+    "address": "0x80",
+    "expected": "чтение разрешено (RW)",
+    "actual": "только запись (WO)",
+    "description": "Документация не соответствует поведению. В spec RW, по факту WO",
+    "severity": "low",
+    "test_name": "test_documentation",
+    "status": "fixed",
+    "notes": "Обновили документацию"
+  },
+  {
+    "id": 5,
+    "timestamp": "2026-03-07T15:05:53",
+    "address": "0x4C",
+    "expected": "0x00000000",
+    "actual": "0xFFFFFFFF",
+    "description": "Запись в защищенный регистр не блокируется",
+    "severity": "critical",
+    "test_name": "test_protected_register",
+    "status": "open",
+    "notes": "Обходится без специальных прав"
+  }
+]

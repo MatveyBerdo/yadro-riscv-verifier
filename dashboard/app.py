@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 # Добавляем путь к проекту
 sys.path.append(str(Path(__file__).parent.parent))
 
-# Настройка страницы - ДОЛЖНА БЫТЬ ПЕРВОЙ командой!
+# Настройка страницы 
 st.set_page_config(
     page_title="Yadro RISC-V Verification",
     page_icon="🔬",

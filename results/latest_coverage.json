@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-03-07T15:30:00",
+  "line_rate": 87.5,
+  "current": 87.5,
+  "files": {
+    "src/register_file.py": 92.3,
+    "src/test_generator.py": 78.5,
+    "src/coverage_analyzer.py": 95.1,
+    "src/bug_tracker.py": 81.2,
+    "src/api_wrapper.py": 65.8,
+    "src/main.py": 88.4,
+    "tests/test_basic.py": 100.0,
+    "tests/test_stress.py": 83.7
+  },
+  "history": [
+    {
+      "timestamp": "2026-03-07T10:00:00",
+      "coverage": 72.3
+    },
+    {
+      "timestamp": "2026-03-07T11:30:00",
+      "coverage": 75.8
+    },
+    {
+      "timestamp": "2026-03-07T13:15:00",
+      "coverage": 79.2
+    },
+    {
+      "timestamp": "2026-03-07T14:45:00",
+      "coverage": 84.5
+    },
+    {
+      "timestamp": "2026-03-07T15:30:00",
+      "coverage": 87.5
+    }
+  ]
+}
