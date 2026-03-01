@@ -110,21 +110,48 @@ def load_bugs_data():
 
 
 @st.cache_data
-def generate_register_matrix():
-    """Генерирует матрицу покрытия регистров 16x16"""
+def load_register_matrix():
+    """Загружает матрицу покрытия регистров из JSON или создает демо"""
+    matrix_file = Path("results/register_matrix.json")
+    
+    if matrix_file.exists():
+        try:
+            with open(matrix_file, 'r') as f:
+                data = json.load(f)
+            
+            # Извлекаем матрицу
+            if isinstance(data, dict) and 'matrix' in data:
+                matrix = np.array(data['matrix'])
+            elif isinstance(data, list):
+                matrix = np.array(data)
+            else:
+                raise ValueError("Неизвестный формат JSON")
+            
+            # Если одномерный массив 256 элементов - преобразуем
+            if matrix.ndim == 1 and matrix.size == 256:
+                matrix = matrix.reshape(16, 16)
+            
+            # Проверяем размер
+            if matrix.shape == (16, 16):
+                return matrix
+            
+        except Exception as e:
+            # Если ошибка - просто используем демо
+            pass
+    
+    # Демо-данные
     np.random.seed(42)
-    matrix = np.random.uniform(60, 100, (16, 16))
-    # Добавляем несколько проблемных зон
-    matrix[5, 5] = 45   # низкое покрытие
-    matrix[10, 10] = 52  # низкое покрытие
-    matrix[3, 12] = 38   # очень низкое
+    matrix = np.random.randint(60, 101, (16, 16))
+    matrix[5, 5] = 45
+    matrix[10, 10] = 52
+    matrix[3, 12] = 38
     return matrix
 
 
 # Загружаем данные
 coverage_data = load_coverage_data()
 bugs_data = load_bugs_data()
-register_matrix = generate_register_matrix()
+register_matrix = load_register_matrix()
 
 # Преобразуем в DataFrame для удобства
 df_bugs = pd.DataFrame(bugs_data)
@@ -288,7 +315,7 @@ with tab1:
             for f, c in files_data.items()
         ]).sort_values('coverage')
         
-        col1, col2 = st.columns([2, 1])
+        col1, col2 = st.columns([3, 1])
         
         with col1:
             # Горизонтальная бар-чарт
@@ -340,83 +367,213 @@ with tab2:
     
     with col1:
         # Тепловая карта 16x16
-        fig_heatmap = px.imshow(
-            register_matrix,
-            labels=dict(
-                x="Младшие 4 бита адреса",
-                y="Старшие 4 бита адреса",
-                color="Покрытие (%)"
+        register_matrix_float = register_matrix.astype(float)
+        
+        # Транспонируем матрицу для правильного отображения
+        # В исходной матрице: register_matrix[старший][младший]
+        # Для отображения нужно: register_matrix[младший][старший]
+        register_matrix_display = np.flipud(register_matrix_float)
+        
+        # Создаем кастомную цветовую шкалу
+        colorscale = [
+            [0.0, '#8B0000'],      # Темно-красный для 0-20%
+            [0.2, '#FF0000'],      # Красный для 20%
+            [0.4, '#FF4500'],      # Оранжево-красный для 40%
+            [0.6, '#FFA500'],      # Оранжевый для 60%
+            [0.7, '#FFFF00'],      # Желтый для 70%
+            [0.8, '#ADFF2F'],      # Желто-зеленый для 80%
+            [0.9, '#32CD32'],      # Лаймово-зеленый для 90%
+            [1.0, '#006400']       # Темно-зеленый для 100%
+        ]
+        
+        # Подписи осей - обе от 0x0 до 0xF
+        x_labels = [f"0x{i:X}" for i in range(16)]  # Младший полубайт
+        y_labels = [f"0x{i:X}" for i in range(15, -1, -1)]  # Старший полубайт (сверху вниз)
+        
+        fig_heatmap = go.Figure(data=go.Heatmap(
+            z=register_matrix_display,
+            x=x_labels,  # Младший полубайт: 0x0 - 0xF
+            y=y_labels,  # Старший полубайт: 0xF - 0x0 (сверху вниз)
+            colorscale=colorscale,
+            zmin=0,
+            zmax=100,
+            text=register_matrix_display,
+            texttemplate='%{text:.0f}%',
+            textfont={"size": 10, "color": "black"},
+            colorbar=dict(
+                title="Покрытие %",
+                tickvals=[0, 20, 40, 60, 70, 80, 90, 100],
+                ticktext=["0%", "20%", "40%", "60%", "70%", "80%", "90%", "100%"],
+                ticks="outside",
+                len=0.8
             ),
-            x=[f"{i:X}" for i in range(16)],
-            y=[f"{i:X}" for i in range(16)],
-            color_continuous_scale='RdYlGn',
-            aspect="auto",
-            title="Покрытие по адресному пространству",
-            text_auto='.0f'
+            hoverongaps=False,
+            hovertemplate='Адрес: 0x%{y}%{x}<br>Покрытие: %{z:.1f}%<extra></extra>'
+        ))
+        
+        fig_heatmap.update_layout(
+            title="Покрытие регистров RISC-V (адреса 0x00 - 0xFF)",
+            xaxis_title="Младший полубайт",
+            yaxis_title="Старший полубайт",
+            height=600,
+            width=600,
+            xaxis=dict(side='bottom')
         )
         
-        fig_heatmap.update_layout(height=600)
         st.plotly_chart(fig_heatmap, use_container_width=True)
+        
+        # Пояснение
+        st.caption("📍 Адрес регистра формируется как: 0x[старший_полубайт][младший_полубайт], например 0xA3")
+        
+        # Добавим таблицу соответствия адресов
+        with st.expander("📋 Как читать тепловую карту"):
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.markdown("""
+                **Старший полубайт (вертикаль):**
+                - Значения: 0xF (вверху), 0xE, 0xD, ..., 0x0 (внизу)
+                - Определяет старшие 4 бита адреса
+                """)
+            with col_b:
+                st.markdown("""
+                **Младший полубайт (горизонталь):**
+                - Значения: 0x0, 0x1, 0x2, ..., 0xF (слева направо)
+                - Определяет младшие 4 бита адреса
+                """)
+            
+            # Примеры адресов
+            examples = pd.DataFrame({
+                "Старший": ["0xA", "0x7", "0x3"],
+                "Младший": ["0x3", "0xF", "0x0"],
+                "Полный адрес": ["0xA3", "0x7F", "0x30"],
+                "Десятичный": [163, 127, 48]
+            })
+            st.dataframe(examples, use_container_width=True, hide_index=True)
     
     with col2:
-        st.markdown("### 📊 Легенда")
+        st.markdown("### 📊 Отображение")
         st.markdown("🟢 **90-100%** - Отлично")
         st.markdown("🟡 **80-89%** - Хорошо")
-        st.markdown("🟠 **70-79%** - Требует внимания")
-        st.markdown("🔴 **<70%** - Критично")
+        st.markdown("🟡 **70-79%** - Средне")
+        st.markdown("🟠 **60-69%** - Требует внимания")
+        st.markdown("🔴 **40-59%** - Плохо")
+        st.markdown("🔴 **20-39%** - Критично")
+        st.markdown("🔴 **0-19%** - Критично")
         
         st.divider()
         
-        # Поиск проблемных адресов
-        st.markdown("### 🔍 Проблемные адреса")
+        # Быстрый переход по адресу
+        st.markdown("### 🔍 Поиск по адресу")
+        addr_input = st.text_input("Введите адрес (например, A3)", value="A3").upper()
         
-        threshold = st.slider(
-            "Показать адреса с покрытием ниже",
-            min_value=0,
-            max_value=100,
-            value=80,
-            step=5
-        )
+        try:
+            if len(addr_input) == 2:
+                high = int(addr_input[0], 16)  # старший полубайт
+                low = int(addr_input[1], 16)   # младший полубайт
+                if 0 <= high < 16 and 0 <= low < 16:
+                    coverage_value = register_matrix[high, low]  # Используем исходную матрицу
+                    
+                    # Определяем цвет
+                    if coverage_value >= 90:
+                        status = "🟢 Отлично"
+                    elif coverage_value >= 80:
+                        status = "🟡 Хорошо"
+                    elif coverage_value >= 70:
+                        status = "🟡 Средне"
+                    elif coverage_value >= 60:
+                        status = "🟠 Требует внимания"
+                    else:
+                        status = "🔴 Критично"
+                    
+                    st.metric(
+                        f"Регистр 0x{addr_input}",
+                        f"{coverage_value:.1f}%",
+                        delta=status
+                    )
+                    
+                    # Показываем позицию на карте
+                    st.caption(f"Позиция: старший={high} (0x{high:X}), младший={low} (0x{low:X})")
+                else:
+                    st.error("Некорректный адрес")
+        except:
+            st.error("Введите адрес в формате: A3, 7F, 00 и т.д.")
         
-        # Находим адреса ниже порога
-        problem_addrs = []
-        for i in range(16):
-            for j in range(16):
-                if register_matrix[i, j] < threshold:
-                    addr = f"0x{i:X}{j:X}"
-                    problem_addrs.append({
-                        "address": addr,
-                        "coverage": f"{register_matrix[i, j]:.1f}%"
-                    })
+        # st.divider()
         
-        if problem_addrs:
-            df_problems = pd.DataFrame(problem_addrs)
-            st.dataframe(df_problems, use_container_width=True, hide_index=True)
-        else:
-            st.success(f"Нет адресов с покрытием ниже {threshold}%")
+        # # Поиск проблемных адресов
+        # st.markdown("### 🔍 Проблемные адреса")
+        
+        # threshold = st.slider(
+        #     "Показать адреса с покрытием ниже",
+        #     min_value=0,
+        #     max_value=100,
+        #     value=70,
+        #     step=5
+        # )
+        
+        # # Находим адреса ниже порога
+        # problem_addrs = []
+        # for i in range(16):  # старший полубайт
+        #     for j in range(16):  # младший полубайт
+        #         if register_matrix[i, j] < threshold:
+        #             addr = f"0x{i:X}{j:X}"
+        #             coverage_val = register_matrix[i, j]
+                    
+        #             # Определяем цвет для статуса
+        #             if coverage_val < 40:
+        #                 status = "🔴 КРИТИЧНО"
+        #             elif coverage_val < 60:
+        #                 status = "🔴 Плохо"
+        #             elif coverage_val < 70:
+        #                 status = "🟠 Требует внимания"
+        #             else:
+        #                 status = "🟡 Средне"
+                    
+        #             problem_addrs.append({
+        #                 "Адрес": addr,
+        #                 "Покрытие": coverage_val,
+        #                 "Статус": status
+        #             })
+        
+        # if problem_addrs:
+        #     df_problems = pd.DataFrame(problem_addrs)
+        #     df_problems = df_problems.sort_values('Покрытие')
+            
+        #     st.dataframe(
+        #         df_problems,
+        #         column_config={
+        #             "Адрес": st.column_config.TextColumn("Адрес", width="small"),
+        #             "Покрытие": st.column_config.ProgressColumn(
+        #                 "Покрытие",
+        #                 min_value=0,
+        #                 max_value=100,
+        #                 format="%.1f%%"
+        #             ),
+        #             "Статус": st.column_config.TextColumn("Статус", width="medium")
+        #         },
+        #         use_container_width=True,
+        #         hide_index=True
+        #     )
+            
+        #     # Статистика
+        #     st.divider()
+        #     col_a, col_b, col_c = st.columns(3)
+            
+        #     critical_count = len([a for a in problem_addrs if "КРИТИЧНО" in a["Статус"]])
+        #     bad_count = len([a for a in problem_addrs if "Плохо" in a["Статус"]])
+        #     warning_count = len([a for a in problem_addrs if "Требует внимания" in a["Статус"]])
+            
+        #     with col_a:
+        #         st.metric("🔴 Критичных", critical_count)
+        #     with col_b:
+        #         st.metric("🔴 Плохих", bad_count)
+        #     with col_c:
+        #         st.metric("🟠 Требуют внимания", warning_count)
+                
+        # else:
+        #     st.success(f"✅ Нет адресов с покрытием ниже {threshold}%")
     
-    # 3D визуализация (опционально)
-    with st.expander("🎮 3D-визуализация покрытия"):
-        fig_3d = go.Figure(data=[
-            go.Surface(
-                z=register_matrix,
-                colorscale='RdYlGn',
-                showscale=True,
-                colorbar=dict(title="Покрытие %")
-            )
-        ])
-        
-        fig_3d.update_layout(
-            title="3D-поверхность покрытия регистров",
-            scene=dict(
-                xaxis_title="Младшие биты",
-                yaxis_title="Старшие биты",
-                zaxis_title="Покрытие %"
-            ),
-            height=600
-        )
-        
-        st.plotly_chart(fig_3d, use_container_width=True)
+    
 
 
 # ========== ВКЛАДКА 3: НАЙДЕННЫЕ БАГИ ==========
@@ -611,11 +768,12 @@ with tab4:
         report_dir.mkdir(exist_ok=True)
         
         # График прогресса
-        if not df_history.empty:
+        if not df_history.empty and 'fig_progress' in locals():
             fig_progress.write_html(report_dir / "progress.html")
         
-        # Тепловая карта
-        fig_heatmap.write_html(report_dir / "heatmap.html")
+        # Тепловая карта - теперь fig_heatmap определена глобально
+        if 'fig_heatmap' in locals():
+            fig_heatmap.write_html(report_dir / "heatmap.html")
         
         # Круговая диаграмма
         if 'fig_pie' in locals():
